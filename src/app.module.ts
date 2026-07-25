@@ -16,6 +16,9 @@ import { CoursiersModule } from './modules/coursiers/coursiers.module';
 import { CoursiersController } from './modules/coursiers/coursiers.controller';
 import { CoursiersService } from './modules/coursiers/coursiers.service';
 import { StockageModule } from './stockage/stockage.module';
+import { PartenairesModule } from './modules/partenaires/partenaires.module';
+import { PartenairesController } from './modules/partenaires/partenaires.controller';
+import { PartenairesService } from './modules/partenaires/partenaires.service';
 
 @Module({
   imports: [
@@ -32,13 +35,15 @@ import { StockageModule } from './stockage/stockage.module';
     AuthModule,
     CoursiersModule,
     StockageModule,
+    PartenairesModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     AgentsService,
     AuthService,
     CoursiersService,
+    PartenairesService,
   ],
-  controllers: [AgentsController, AuthController, CoursiersController],
+  controllers: [AgentsController, AuthController, CoursiersController, PartenairesController],
 })
 export class AppModule {}
