@@ -60,6 +60,7 @@ export function configurerSwagger(app: INestApplication) {
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'jetonVendeur')
     .addTag('Coursiers', 'Recensement des livreurs sur le terrain')
     .addTag('Partenaires', 'Recensement des entreprises de livraison')
+    .addTag('Export', 'Telechargement du registre en Excel et PDF')
     .addTag('Systeme', 'Etat du service et metadonnees techniques')
     .addTag('Agents', 'Gestion des comptes agents et administrateurs')
     .build();

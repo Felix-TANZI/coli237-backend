@@ -19,6 +19,7 @@ import { StockageModule } from './stockage/stockage.module';
 import { PartenairesModule } from './modules/partenaires/partenaires.module';
 import { PartenairesController } from './modules/partenaires/partenaires.controller';
 import { PartenairesService } from './modules/partenaires/partenaires.service';
+import { ExportModule } from './modules/export/export.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { PartenairesService } from './modules/partenaires/partenaires.service';
     CoursiersModule,
     StockageModule,
     PartenairesModule,
+    ExportModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
