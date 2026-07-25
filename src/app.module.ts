@@ -6,6 +6,9 @@ import { validerEnv } from './config/env.schema';
 import { HealthModule } from './modules/health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { SecuriteModule } from './securite/securite.module';
+import { AgentsModule } from './modules/agents/agents.module';
+import { AgentsController } from './modules/agents/agents.controller';
+import { AgentsService } from './modules/agents/agents.service';
 
 @Module({
   imports: [
@@ -18,7 +21,9 @@ import { SecuriteModule } from './securite/securite.module';
     PrismaModule,
     SecuriteModule,
     HealthModule,
+    AgentsModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }, AgentsService],
+  controllers: [AgentsController],
 })
 export class AppModule {}

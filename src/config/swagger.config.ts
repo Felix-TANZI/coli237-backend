@@ -59,6 +59,7 @@ export function configurerSwagger(app: INestApplication) {
     .setContact('NET AND PROSYSTEMS SARL', 'https://coli237.com', '')
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'jetonVendeur')
     .addTag('Systeme', 'Etat du service et metadonnees techniques')
+    .addTag('Agents', 'Gestion des comptes agents et administrateurs')
     .build();
 
   const document = cleanupOpenApiDoc(SwaggerModule.createDocument(app, configuration));
