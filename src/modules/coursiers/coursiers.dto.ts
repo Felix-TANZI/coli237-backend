@@ -55,3 +55,12 @@ export class CreerCoursierDto extends createZodDto(CreerCoursierSchema) {}
 export const ModifierCoursierSchema = CreerCoursierSchema.partial();
 
 export class ModifierCoursierDto extends createZodDto(ModifierCoursierSchema) {}
+
+// --- Mise a jour de la seule position GPS ---
+export const PositionSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  adresseGps: z.string().trim().max(255).optional(),
+});
+
+export class PositionDto extends createZodDto(PositionSchema) {}

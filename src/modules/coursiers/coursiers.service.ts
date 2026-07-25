@@ -70,6 +70,8 @@ export class CoursiersService {
       data: {
         ...donnees,
         dateNaissance: donnees.dateNaissance ? new Date(donnees.dateNaissance) : undefined,
+        // Une fiche rejetee puis corrigee repasse en attente de validation.
+        statut: coursier.statut === 'REJETE' ? 'EN_ATTENTE' : undefined,
       },
     });
   }
@@ -113,6 +115,50 @@ export class CoursiersService {
         nomOriginal: fichier.originalname,
         coursierId,
       },
+    });
+  }
+  // Met a jour uniquement la position GPS d'un coursier.
+  async mettreAJourPosition(
+    id: string,
+    agent: { id: string; role: string },
+    position: { latitude: number; longitude: number; adresseGps?: string },
+  ) {
+    const coursier = await this.trouver(id);
+
+    if (coursier.statut === 'VALIDE') {
+      throw new ForbiddenException('Cette fiche est validee et ne peut plus etre modifiee.');
+    }
+
+    if (agent.role !== 'ADMIN' && coursier.agentId !== agent.id) {
+      throw new ForbiddenException('Vous ne pouvez modifier que vos propres recensements.');
+    }
+
+    return this.prisma.coursier.update({
+      where: { id },
+      data: {
+        latitude: position.latitude,
+        longitude: position.longitude,
+        adresseGps: position.adresseGps,
+      },
+    });
+  }
+  // Valide une fiche : elle entre au registre officiel et devient figee.
+  async valider(id: string) {
+    await this.trouver(id);
+
+    return this.prisma.coursier.update({
+      where: { id },
+      data: { statut: 'VALIDE' },
+    });
+  }
+
+  // Rejette une fiche : l'agent pourra la corriger et la resoumettre.
+  async rejeter(id: string) {
+    await this.trouver(id);
+
+    return this.prisma.coursier.update({
+      where: { id },
+      data: { statut: 'REJETE' },
     });
   }
 }

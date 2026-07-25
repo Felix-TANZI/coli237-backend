@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CoursiersService } from './coursiers.service';
-import { CreerCoursierDto, ModifierCoursierDto } from './coursiers.dto';
+import { CreerCoursierDto, ModifierCoursierDto, PositionDto } from './coursiers.dto';
 import { Connecte } from '../auth/agent-connecte.decorator';
 import { JwtGuard } from '../auth/jwt.guard';
 import type { AgentConnecte } from '../auth/jwt.strategy';
@@ -18,6 +18,8 @@ import { ParseFilePipeBuilder, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { UseInterceptors } from '@nestjs/common';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 @ApiTags('Coursiers')
 @ApiBearerAuth('jetonVendeur')
@@ -85,5 +87,38 @@ export class CoursiersController {
     fichier: Express.Multer.File,
   ) {
     return this.coursiers.ajouterPiece(id, type, fichier);
+  }
+  @Patch(':id/position')
+  @ApiOperation({
+    summary: 'Mettre a jour la position GPS',
+    description: 'Ajuste uniquement les coordonnees, sans toucher au reste.',
+  })
+  async mettreAJourPosition(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Connecte() agent: AgentConnecte,
+    @Body() position: PositionDto,
+  ) {
+    return this.coursiers.mettreAJourPosition(id, agent, position);
+  }
+  @Post(':id/valider')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  @ApiOperation({
+    summary: 'Valider un coursier',
+    description: 'Reserve aux admins. La fiche entre au registre et devient figee.',
+  })
+  async valider(@Param('id', ParseUUIDPipe) id: string) {
+    return this.coursiers.valider(id);
+  }
+
+  @Post(':id/rejeter')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
+  @ApiOperation({
+    summary: 'Rejeter un coursier',
+    description: 'Reserve aux admins. L agent pourra corriger et resoumettre.',
+  })
+  async rejeter(@Param('id', ParseUUIDPipe) id: string) {
+    return this.coursiers.rejeter(id);
   }
 }
