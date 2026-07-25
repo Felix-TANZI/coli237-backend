@@ -12,6 +12,8 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const config = app.get(ConfigService);
 
+  // Railway place l'application derriere un proxy : sans cela, la limitation
+  // de debit voit toujours la meme adresse pour tout le trafic.
   app.set('trust proxy', 1);
   app.disable('x-powered-by');
 
@@ -25,8 +27,8 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger a besoin de styles et scripts en ligne, et le theme charge ses
-  // polices depuis Google Fonts. On assouplit sur ce chemin uniquement.
+  // Swagger a besoin de styles et de scripts en ligne, et le theme charge ses
+  // polices depuis Google Fonts. On assouplit sur ces chemins uniquement.
   app.use(
     ['/docs', '/public'],
     helmet({
