@@ -9,6 +9,9 @@ import { SecuriteModule } from './securite/securite.module';
 import { AgentsModule } from './modules/agents/agents.module';
 import { AgentsController } from './modules/agents/agents.controller';
 import { AgentsService } from './modules/agents/agents.service';
+import { AuthModule } from './modules/auth/auth.module';
+import { AuthController } from './modules/auth/auth.controller';
+import { AuthService } from './modules/auth/auth.service';
 
 @Module({
   imports: [
@@ -22,8 +25,9 @@ import { AgentsService } from './modules/agents/agents.service';
     SecuriteModule,
     HealthModule,
     AgentsModule,
+    AuthModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }, AgentsService],
-  controllers: [AgentsController],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }, AgentsService, AuthService],
+  controllers: [AgentsController, AuthController],
 })
 export class AppModule {}
