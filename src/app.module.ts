@@ -5,6 +5,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { validerEnv } from './config/env.schema';
 import { HealthModule } from './modules/health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { SecuriteModule } from './securite/securite.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { PrismaModule } from './prisma/prisma.module';
     }),
     ThrottlerModule.forRoot([{ name: 'global', ttl: 60_000, limit: 120 }]),
     PrismaModule,
+    SecuriteModule,
     HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
