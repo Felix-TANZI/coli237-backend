@@ -14,6 +14,10 @@ import { CreerCoursierDto, ModifierCoursierDto } from './coursiers.dto';
 import { Connecte } from '../auth/agent-connecte.decorator';
 import { JwtGuard } from '../auth/jwt.guard';
 import type { AgentConnecte } from '../auth/jwt.strategy';
+import { ParseFilePipeBuilder, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { UseInterceptors } from '@nestjs/common';
 
 @ApiTags('Coursiers')
 @ApiBearerAuth('jetonVendeur')
@@ -51,5 +55,35 @@ export class CoursiersController {
     @Body() donnees: ModifierCoursierDto,
   ) {
     return this.coursiers.modifier(id, agent, donnees);
+  }
+  @Post(':id/documents')
+  @UseInterceptors(FileInterceptor('fichier'))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: 'Ajouter une photo ou un document',
+    description:
+      'Types : PHOTO_IDENTITE, CNI, PERMIS, CARTE_GRISE, ASSURANCE, CARTE_SMT, AUTRE. Formats acceptes : jpg, png, pdf. Max 5 Mo.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        type: { type: 'string', example: 'CNI' },
+        fichier: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  async ajouterDocument(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('type') type: string,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({ fileType: /(jpeg|jpg|png|pdf)$/ })
+        .addMaxSizeValidator({ maxSize: 5 * 1024 * 1024 })
+        .build(),
+    )
+    fichier: Express.Multer.File,
+  ) {
+    return this.coursiers.ajouterPiece(id, type, fichier);
   }
 }

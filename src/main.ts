@@ -51,6 +51,7 @@ async function bootstrap() {
   });
 
   app.useStaticAssets(join(__dirname, '..', 'public'), { prefix: '/public/' });
+  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads/' });
   app.useGlobalPipes(new ZodValidationPipe());
   app.enableShutdownHooks();
 

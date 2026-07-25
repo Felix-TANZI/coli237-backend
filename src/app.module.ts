@@ -15,6 +15,7 @@ import { AuthService } from './modules/auth/auth.service';
 import { CoursiersModule } from './modules/coursiers/coursiers.module';
 import { CoursiersController } from './modules/coursiers/coursiers.controller';
 import { CoursiersService } from './modules/coursiers/coursiers.service';
+import { StockageModule } from './stockage/stockage.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CoursiersService } from './modules/coursiers/coursiers.service';
     AgentsModule,
     AuthModule,
     CoursiersModule,
+    StockageModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

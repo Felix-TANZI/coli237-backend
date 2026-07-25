@@ -1,10 +1,14 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { CreerCoursierDto, ModifierCoursierDto } from './coursiers.dto';
+import { StockageService } from '../../stockage/stockage.service';
 
 @Injectable()
 export class CoursiersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly stockage: StockageService,
+  ) {}
 
   // Recense un nouveau coursier. L'agent qui cree est enregistre.
   async creer(agentId: string, donnees: CreerCoursierDto) {
@@ -66,6 +70,48 @@ export class CoursiersService {
       data: {
         ...donnees,
         dateNaissance: donnees.dateNaissance ? new Date(donnees.dateNaissance) : undefined,
+      },
+    });
+  }
+
+  // Types de document dont un coursier ne peut avoir qu'un seul exemplaire.
+  private readonly typesUniques = [
+    'PHOTO_IDENTITE',
+    'CNI',
+    'PERMIS',
+    'CARTE_GRISE',
+    'ASSURANCE',
+    'CARTE_SMT',
+  ];
+
+  // Ajoute une piece jointe a un coursier.
+  async ajouterPiece(coursierId: string, type: string, fichier: Express.Multer.File) {
+    const coursier = await this.trouver(coursierId);
+
+    if (coursier.statut === 'VALIDE') {
+      throw new ForbiddenException('Cette fiche est validee : impossible d ajouter un document.');
+    }
+
+    // Pour un type unique, on remplace l'ancien fichier s'il existe.
+    if (this.typesUniques.includes(type)) {
+      const existant = await this.prisma.pieceJointe.findFirst({
+        where: { coursierId, type: type as never },
+      });
+
+      if (existant) {
+        await this.stockage.supprimer(existant.chemin);
+        await this.prisma.pieceJointe.delete({ where: { id: existant.id } });
+      }
+    }
+
+    const chemin = await this.stockage.enregistrer(fichier, `coursiers/${coursierId}`);
+
+    return this.prisma.pieceJointe.create({
+      data: {
+        type: type as never,
+        chemin,
+        nomOriginal: fichier.originalname,
+        coursierId,
       },
     });
   }
