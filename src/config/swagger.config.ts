@@ -58,6 +58,7 @@ export function configurerSwagger(app: INestApplication) {
     .setVersion('0.1.0')
     .setContact('NET AND PROSYSTEMS SARL', 'https://coli237.com', '')
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'jetonVendeur')
+    .addTag('Coursiers', 'Recensement des livreurs sur le terrain')
     .addTag('Systeme', 'Etat du service et metadonnees techniques')
     .addTag('Agents', 'Gestion des comptes agents et administrateurs')
     .build();
