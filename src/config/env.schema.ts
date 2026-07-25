@@ -23,6 +23,9 @@ export const envSchema = z.object({
   CORS_ORIGINS: z.string().default('http://localhost:5173').transform(listeSeparee),
 
   JWT_SECRET: z.string().min(32, 'JWT_SECRET doit faire au moins 32 caracteres'),
+  JWT_EXPIRES_IN: z.string().default('7d'),
+
+  DATABASE_URL: z.string().url({ message: 'DATABASE_URL doit etre une URL PostgreSQL valide' }),
 
   SUPABASE_URL: optionnel(z.url()),
   SUPABASE_SERVICE_KEY: optionnel(z.string()),

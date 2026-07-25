@@ -1,0 +1,241 @@
+// ---------------------------------------------------------------------------
+// COLI237 — Plateforme de recensement des livreurs
+// Espace Agent + Espace Admin. PostgreSQL 16.
+// ---------------------------------------------------------------------------
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ===========================================================================
+// AGENT — personne de terrain qui recense. Cree par l'admin.
+// ===========================================================================
+model Agent {
+  id String @id @default(uuid()) @db.Uuid
+
+  nom        String @db.VarChar(120)
+  telephone  String @unique @db.VarChar(20)
+  email      String @unique @db.VarChar(160)
+  motDePasse String @map("mot_de_passe") @db.VarChar(255)
+
+  role RoleAgent @default(AGENT)
+
+  // Vrai a la creation : l'agent doit changer son mot de passe
+  // a la premiere connexion.
+  doitChangerMotDePasse Boolean @default(true) @map("doit_changer_mot_de_passe")
+
+  statut     StatutCompte @default(ACTIF)
+  supprimeLe DateTime?    @map("supprime_le")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+
+  coursiers   Coursier[]
+  partenaires Partenaire[]
+
+  @@index([statut])
+  @@index([role])
+  @@map("agents")
+}
+
+// ===========================================================================
+// PARTENAIRE — entreprise ou agence de livraison recensee.
+// ===========================================================================
+model Partenaire {
+  id String @id @default(uuid()) @db.Uuid
+
+  // Entreprise
+  nom            String  @db.VarChar(160)
+  sigle          String? @db.VarChar(60)
+  niu            String? @db.VarChar(30) // Numero d'Identifiant Unique
+  registreCommerce String? @map("registre_commerce") @db.VarChar(60)
+
+  // Responsable
+  responsableNom      String  @map("responsable_nom") @db.VarChar(120)
+  responsableTelephone String @map("responsable_telephone") @db.VarChar(20)
+  responsableEmail    String? @map("responsable_email") @db.VarChar(160)
+
+  // Localisation
+  ville   String? @db.VarChar(80)
+  quartier String? @db.VarChar(120)
+  adresse String? @db.VarChar(255)
+  latitude  Float?
+  longitude Float?
+
+  // Paiement
+  mobileMoneyNumero String?          @map("mobile_money_numero") @db.VarChar(20)
+  mobileMoneyOperateur OperateurMobileMoney? @map("mobile_money_operateur")
+
+  // Traçabilite
+  agentId String @map("agent_id") @db.Uuid
+  agent   Agent  @relation(fields: [agentId], references: [id], onDelete: Restrict)
+
+  statut    StatutValidation @default(EN_ATTENTE)
+  supprimeLe DateTime? @map("supprime_le")
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+
+  coursiers  Coursier[]
+  documents  PieceJointe[]
+
+  @@index([statut])
+  @@index([agentId])
+  @@index([ville])
+  @@index([supprimeLe])
+  @@map("partenaires")
+}
+
+// ===========================================================================
+// COURSIER — livreur recense.
+// Freelance si partenaireId est vide ; employe d'un partenaire sinon.
+// ===========================================================================
+model Coursier {
+  id String @id @default(uuid()) @db.Uuid
+
+  // Identite
+  nom          String    @db.VarChar(120)
+  telephone    String    @db.VarChar(20)
+  cni          String?   @db.VarChar(30)
+  dateNaissance DateTime? @map("date_naissance") @db.Date
+
+  // Localisation habituelle
+  ville   String? @db.VarChar(80)
+  quartier String? @db.VarChar(120)
+
+  // Vehicule
+  typeVehicule TypeVehicule @map("type_vehicule")
+  plaque       String?      @db.VarChar(20)
+  marqueModele String?      @map("marque_modele") @db.VarChar(120)
+
+  // Documents detenus (cases oui/non ; les scans vont dans PieceJointe)
+  aPermis     Boolean       @default(false) @map("a_permis")
+  permisCategorie CategoriePermis? @map("permis_categorie")
+  aCarteGrise Boolean       @default(false) @map("a_carte_grise")
+  aAssurance  Boolean       @default(false) @map("a_assurance")
+  aCarteSmt   Boolean       @default(false) @map("a_carte_smt")
+
+  // Paiement
+  mobileMoneyNumero    String?               @map("mobile_money_numero") @db.VarChar(20)
+  mobileMoneyOperateur OperateurMobileMoney? @map("mobile_money_operateur")
+
+  // Position GPS du recensement
+  latitude   Float?
+  longitude  Float?
+  adresseGps String? @map("adresse_gps") @db.VarChar(255)
+
+  // Rattachement partenaire (vide = freelance)
+  partenaireId String?     @map("partenaire_id") @db.Uuid
+  partenaire   Partenaire? @relation(fields: [partenaireId], references: [id], onDelete: SetNull)
+
+  // Traçabilite
+  agentId String @map("agent_id") @db.Uuid
+  agent   Agent  @relation(fields: [agentId], references: [id], onDelete: Restrict)
+
+  statut     StatutValidation @default(EN_ATTENTE)
+  supprimeLe DateTime?        @map("supprime_le")
+  createdAt  DateTime         @default(now()) @map("created_at")
+  updatedAt  DateTime         @updatedAt @map("updated_at")
+
+  documents PieceJointe[]
+
+  @@index([statut])
+  @@index([agentId])
+  @@index([partenaireId])
+  @@index([ville])
+  @@index([supprimeLe])
+  @@map("coursiers")
+}
+
+// ===========================================================================
+// PIECE JOINTE — photo ou document, rattache a un coursier OU un partenaire.
+// ===========================================================================
+model PieceJointe {
+  id String @id @default(uuid()) @db.Uuid
+
+  type    TypePieceJointe
+  chemin  String  @db.VarChar(500) // chemin du fichier stocke
+  nomOriginal String? @map("nom_original") @db.VarChar(255)
+
+  coursierId String?   @map("coursier_id") @db.Uuid
+  coursier   Coursier? @relation(fields: [coursierId], references: [id], onDelete: Cascade)
+
+  partenaireId String?     @map("partenaire_id") @db.Uuid
+  partenaire   Partenaire? @relation(fields: [partenaireId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([coursierId])
+  @@index([partenaireId])
+  @@map("pieces_jointes")
+}
+
+// ===========================================================================
+// ENUMS
+// ===========================================================================
+enum StatutCompte {
+  ACTIF
+  SUSPENDU
+
+  @@map("statut_compte")
+}
+
+enum StatutValidation {
+  EN_ATTENTE
+  VALIDE
+  REJETE
+
+  @@map("statut_validation")
+}
+
+enum TypeVehicule {
+  MOTO
+  TRICYCLE
+  VOITURE
+  CAMIONNETTE
+  A_PIED
+  AUTRE
+
+  @@map("type_vehicule")
+}
+
+enum CategoriePermis {
+  A // motos et cyclomoteurs
+  B // vehicules <= 3,5 t
+  C // marchandises > 3,5 t
+  D // transport de personnes
+  E // vehicules avec remorque
+
+  @@map("categorie_permis")
+}
+
+enum OperateurMobileMoney {
+  MTN
+  ORANGE
+
+  @@map("operateur_mobile_money")
+}
+
+enum TypePieceJointe {
+  PHOTO_IDENTITE
+  CNI
+  PERMIS
+  CARTE_GRISE
+  ASSURANCE
+  CARTE_SMT
+  REGISTRE_COMMERCE
+  AUTRE
+
+  @@map("type_piece_jointe")
+}
+
+enum RoleAgent {
+  AGENT
+  ADMIN
+
+  @@map("role_agent")
+}

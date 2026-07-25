@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: coli-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: coli
+      POSTGRES_PASSWORD: coli
+      POSTGRES_DB: coli237
+    ports:
+      - '5432:5432'
+    volumes:
+      - coli-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U coli -d coli237']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  coli-db-data:
