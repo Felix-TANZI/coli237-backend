@@ -2,8 +2,13 @@ import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post } from
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AgentsService } from './agents.service';
 import { AgentCreeDto, CreerAgentDto, ModifierAgentDto } from './agents.dto';
+import { UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { JwtGuard } from '../auth/jwt.guard';
 
 @ApiTags('Agents')
+@ApiBearerAuth('jetonVendeur')
+@UseGuards(JwtGuard)
 @Controller('agents')
 export class AgentsController {
   constructor(private readonly agents: AgentsService) {}
