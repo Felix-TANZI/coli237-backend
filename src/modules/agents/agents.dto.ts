@@ -51,3 +51,24 @@ export const AgentSchema = z.object({
 });
 
 export class AgentDto extends createZodDto(AgentSchema) {}
+
+// --- Modification d'un agent ---
+export const ModifierAgentSchema = z.object({
+  nom: z.string().trim().min(2).max(120).optional(),
+  telephone: telephoneSchema.optional(),
+  email: z.email().max(160).optional(),
+  role: z.enum(['AGENT', 'ADMIN']).optional(),
+  statut: z.enum(['ACTIF', 'SUSPENDU']).optional(),
+});
+
+export class ModifierAgentDto extends createZodDto(ModifierAgentSchema) {}
+
+// --- Reponse apres reinitialisation du mot de passe ---
+export const MotDePasseReinitialiseSchema = z.object({
+  id: z.uuid(),
+  motDePasseTemporaire: z.string().meta({
+    description: 'Nouveau mot de passe a usage unique. Affiche une seule fois.',
+  }),
+});
+
+export class MotDePasseReinitialiseDto extends createZodDto(MotDePasseReinitialiseSchema) {}
