@@ -5,10 +5,13 @@ import { AgentCreeDto, CreerAgentDto, ModifierAgentDto } from './agents.dto';
 import { UseGuards } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { JwtGuard } from '../auth/jwt.guard';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 @ApiTags('Agents')
 @ApiBearerAuth('jetonVendeur')
-@UseGuards(JwtGuard)
+@UseGuards(JwtGuard, RolesGuard)
+@Roles('ADMIN')
 @Controller('agents')
 export class AgentsController {
   constructor(private readonly agents: AgentsService) {}
