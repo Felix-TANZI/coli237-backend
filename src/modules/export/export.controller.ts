@@ -36,4 +36,26 @@ export class ExportController {
     });
     res.send(fichier);
   }
+
+  @Get('partenaires.xlsx')
+  @ApiOperation({ summary: 'Telecharger les partenaires en Excel (admin)' })
+  async partenairesExcel(@Res() res: Response) {
+    const fichier = await this.exportService.partenairesExcel();
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename="partenaires.xlsx"',
+    });
+    res.send(fichier);
+  }
+
+  @Get('partenaires.pdf')
+  @ApiOperation({ summary: 'Telecharger les partenaires en PDF (admin)' })
+  async partenairesPdf(@Res() res: Response) {
+    const fichier = await this.exportService.partenairesPdf();
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename="partenaires.pdf"',
+    });
+    res.send(fichier);
+  }
 }
