@@ -1,6 +1,6 @@
-import { Controller, Get, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ExportService } from './export.service';
 import { JwtGuard } from '../auth/jwt.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -15,46 +15,26 @@ import { RolesGuard } from '../auth/roles.guard';
 export class ExportController {
   constructor(private readonly exportService: ExportService) {}
 
-  @Get('coursiers.xlsx')
-  @ApiOperation({ summary: 'Telecharger les coursiers en Excel (admin)' })
-  async coursiersExcel(@Res() res: Response) {
-    const fichier = await this.exportService.coursiersExcel();
+  @Get('personnes.xlsx')
+  @ApiOperation({ summary: 'Telecharger les personnes en Excel (admin)' })
+  @ApiQuery({ name: 'role', required: false })
+  async personnesExcel(@Res() res: Response, @Query('role') role?: string) {
+    const fichier = await this.exportService.personnesExcel(role);
     res.set({
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'Content-Disposition': 'attachment; filename="coursiers.xlsx"',
+      'Content-Disposition': 'attachment; filename="personnes.xlsx"',
     });
     res.send(fichier);
   }
 
-  @Get('coursiers.pdf')
-  @ApiOperation({ summary: 'Telecharger les coursiers en PDF (admin)' })
-  async coursiersPdf(@Res() res: Response) {
-    const fichier = await this.exportService.coursiersPdf();
+  @Get('personnes.pdf')
+  @ApiOperation({ summary: 'Telecharger les personnes en PDF (admin)' })
+  @ApiQuery({ name: 'role', required: false })
+  async personnesPdf(@Res() res: Response, @Query('role') role?: string) {
+    const fichier = await this.exportService.personnesPdf(role);
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': 'attachment; filename="coursiers.pdf"',
-    });
-    res.send(fichier);
-  }
-
-  @Get('partenaires.xlsx')
-  @ApiOperation({ summary: 'Telecharger les partenaires en Excel (admin)' })
-  async partenairesExcel(@Res() res: Response) {
-    const fichier = await this.exportService.partenairesExcel();
-    res.set({
-      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'Content-Disposition': 'attachment; filename="partenaires.xlsx"',
-    });
-    res.send(fichier);
-  }
-
-  @Get('partenaires.pdf')
-  @ApiOperation({ summary: 'Telecharger les partenaires en PDF (admin)' })
-  async partenairesPdf(@Res() res: Response) {
-    const fichier = await this.exportService.partenairesPdf();
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': 'attachment; filename="partenaires.pdf"',
+      'Content-Disposition': 'attachment; filename="personnes.pdf"',
     });
     res.send(fichier);
   }

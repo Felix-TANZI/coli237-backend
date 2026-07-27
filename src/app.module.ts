@@ -9,8 +9,8 @@ import { StockageModule } from './stockage/stockage.module';
 import { HealthModule } from './modules/health/health.module';
 import { AgentsModule } from './modules/agents/agents.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { CoursiersModule } from './modules/coursiers/coursiers.module';
-import { PartenairesModule } from './modules/partenaires/partenaires.module';
+import { PersonnesModule } from './modules/personnes/personnes.module';
+import { CompagniesModule } from './modules/compagnies/compagnies.module';
 import { ExportModule } from './modules/export/export.module';
 
 @Module({
@@ -27,8 +27,8 @@ import { ExportModule } from './modules/export/export.module';
     HealthModule,
     AgentsModule,
     AuthModule,
-    CoursiersModule,
-    PartenairesModule,
+    PersonnesModule,
+    CompagniesModule,
     ExportModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
