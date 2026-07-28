@@ -10,13 +10,14 @@ export class CompagniesService {
     return this.prisma.compagnie.create({ data: donnees });
   }
 
-  // Liste les compagnies avec le nombre de personnes rattachees.
+  // Liste les compagnies avec le nombre de personnes et l'admin rattache.
   async lister() {
     return this.prisma.compagnie.findMany({
       where: { supprimeLe: null },
       orderBy: { createdAt: 'desc' },
       include: {
         _count: { select: { personnes: true } },
+        admin: { select: { id: true, prenom: true, nom: true } },
       },
     });
   }
@@ -26,6 +27,7 @@ export class CompagniesService {
       where: { id, supprimeLe: null },
       include: {
         _count: { select: { personnes: true } },
+        admin: { select: { id: true, prenom: true, nom: true } },
       },
     });
 

@@ -35,10 +35,9 @@ export class CompagniesController {
     return this.compagnies.trouver(id);
   }
 
+  // Tout agent connecte peut creer une compagnie (pas seulement l'admin).
   @Post()
-  @UseGuards(RolesGuard)
-  @Roles('ADMIN')
-  @ApiOperation({ summary: 'Creer une compagnie (admin)' })
+  @ApiOperation({ summary: 'Creer une compagnie' })
   async creer(@Body() donnees: CreerCompagnieDto) {
     return this.compagnies.creer(donnees);
   }

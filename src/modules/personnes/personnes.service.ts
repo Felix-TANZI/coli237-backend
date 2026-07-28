@@ -39,7 +39,6 @@ export class PersonnesService {
         typeVehiculeAutre: donnees.typeVehiculeAutre,
         plaque: donnees.plaque,
         compagnieId: donnees.compagnieId,
-        statutChauffeur: donnees.statutChauffeur,
         mobileMoneyNumero: donnees.mobileMoneyNumero,
         mobileMoneyOperateur: donnees.mobileMoneyOperateur,
         agentId,

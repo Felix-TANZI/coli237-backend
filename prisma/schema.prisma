@@ -53,12 +53,17 @@ model Compagnie {
   nom    String @db.VarChar(160)
   statut String @default("ACTIVE") @db.VarChar(20)
 
+  // Admin compagnie rattache (optionnel) : une personne de role ADMIN_COMPAGNIE.
+  adminId String?   @map("admin_id") @db.Uuid
+  admin   Personne? @relation("AdminCompagnie", fields: [adminId], references: [id], onDelete: SetNull)
+
   supprimeLe DateTime? @map("supprime_le")
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @updatedAt @map("updated_at")
 
   personnes Personne[]
 
+  @@index([adminId])
   @@index([supprimeLe])
   @@map("compagnies")
 }
@@ -109,6 +114,9 @@ model Personne {
   agent   Agent  @relation(fields: [agentId], references: [id], onDelete: Restrict)
 
   compagnie Compagnie? @relation(fields: [compagnieId], references: [id], onDelete: SetNull)
+
+  // Compagnies dont cette personne est l'admin (relation inverse).
+  compagniesAdministrees Compagnie[] @relation("AdminCompagnie")
 
   supprimeLe DateTime? @map("supprime_le")
   createdAt  DateTime  @default(now()) @map("created_at")

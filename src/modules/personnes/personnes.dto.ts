@@ -1,16 +1,17 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
-// Telephone camerounais : 6 ou 2 + 8 chiffres.
+// Telephone : format international souple.
+// Accepte un numero local (8-9 chiffres) ou international (+indicatif).
 const telephoneSchema = z
   .string()
   .trim()
-  .regex(/^(\+237)?[62]\d{8}$/, 'Numero de telephone camerounais invalide');
+  .regex(/^\+?\d{8,15}$/, 'Numero invalide (8 a 15 chiffres, indicatif + optionnel)');
 
 const mobileMoneySchema = z
   .string()
   .trim()
-  .regex(/^(\+237)?6\d{8}$/, 'Numero mobile money invalide')
+  .regex(/^\+?\d{8,15}$/, 'Numero invalide')
   .optional();
 
 const ROLES = [
@@ -22,72 +23,66 @@ const ROLES = [
 const VEHICULES = ['MOTO', 'TRICYCLE', 'VOITURE', 'CAMIONNETTE', 'A_PIED', 'AUTRE'] as const;
 
 // --- Creation d'une personne ---
-// Les champs communs sont toujours requis. Les champs specifiques sont
-// valides selon le role via un affinement (superRefine).
+// Champs communs toujours requis. Champs specifiques valides selon le role.
 export const CreerPersonneSchema = z
   .object({
     role: z.enum(ROLES),
 
-    // Identite (commun)
+    // Identite (commun a tous)
     prenom: z.string().trim().min(2, 'Le prenom est requis').max(80),
     nom: z.string().trim().min(2, 'Le nom est requis').max(120),
     email: z.string().trim().email('Email invalide').max(160).optional().or(z.literal('')),
     telephone: telephoneSchema,
     avatarUrl: z.string().trim().max(500).optional(),
 
-    // Localisation (livreurs)
+    // Localisation (optionnel)
     ville: z.string().trim().max(80).optional(),
     quartier: z.string().trim().max(120).optional(),
     latitude: z.number().min(-90).max(90).optional(),
     longitude: z.number().min(-180).max(180).optional(),
 
-    // Vehicule (livreurs)
+    // Vehicule (livreur agence uniquement)
     typeVehicule: z.enum(VEHICULES).optional(),
     typeVehiculeAutre: z.string().trim().max(80).optional(),
     plaque: z.string().trim().max(20).optional(),
 
     // Livreur agence
-    compagnieId: z.uuid().optional(),
-    statutChauffeur: z.string().trim().max(20).optional(),
+    compagnieId: z.string().uuid().optional(),
 
-    // Paiement (livreurs)
+    // Paiement (optionnel)
     mobileMoneyNumero: mobileMoneySchema,
     mobileMoneyOperateur: z.enum(['MTN', 'ORANGE']).optional(),
   })
   .superRefine((donnees, ctx) => {
-    const estLivreur = donnees.role === 'LIVREUR_INDEPENDANT' || donnees.role === 'LIVREUR_AGENCE';
-
-    // Les livreurs doivent avoir un type de vehicule.
-    if (estLivreur && !donnees.typeVehicule) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['typeVehicule'],
-        message: 'Le type de vehicule est requis pour un livreur.',
-      });
-    }
-
-    // Si "Autre", preciser le type.
-    if (donnees.typeVehicule === 'AUTRE' && !donnees.typeVehiculeAutre?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['typeVehiculeAutre'],
-        message: 'Precisez le type de vehicule.',
-      });
-    }
-
-    // Le livreur agence doit etre rattache a une compagnie.
-    if (donnees.role === 'LIVREUR_AGENCE' && !donnees.compagnieId) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['compagnieId'],
-        message: 'La compagnie est requise pour un livreur agence.',
-      });
+    // Seul le livreur agence exige vehicule + compagnie.
+    if (donnees.role === 'LIVREUR_AGENCE') {
+      if (!donnees.typeVehicule) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['typeVehicule'],
+          message: 'Le type de vehicule est requis pour un livreur agence.',
+        });
+      }
+      if (donnees.typeVehicule === 'AUTRE' && !donnees.typeVehiculeAutre?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['typeVehiculeAutre'],
+          message: 'Precisez le type de vehicule.',
+        });
+      }
+      if (!donnees.compagnieId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['compagnieId'],
+          message: 'La compagnie est requise pour un livreur agence.',
+        });
+      }
     }
   });
 
 export class CreerPersonneDto extends createZodDto(CreerPersonneSchema) {}
 
-// --- Modification (tous les champs optionnels, sans l'affinement strict) ---
+// --- Modification (tous optionnels, sans affinement strict) ---
 export const ModifierPersonneSchema = z.object({
   prenom: z.string().trim().min(2).max(80).optional(),
   nom: z.string().trim().min(2).max(120).optional(),
@@ -101,8 +96,7 @@ export const ModifierPersonneSchema = z.object({
   typeVehicule: z.enum(VEHICULES).optional(),
   typeVehiculeAutre: z.string().trim().max(80).optional(),
   plaque: z.string().trim().max(20).optional(),
-  compagnieId: z.uuid().optional(),
-  statutChauffeur: z.string().trim().max(20).optional(),
+  compagnieId: z.string().uuid().optional(),
   mobileMoneyNumero: mobileMoneySchema,
   mobileMoneyOperateur: z.enum(['MTN', 'ORANGE']).optional(),
 });
