@@ -1,7 +1,7 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { ChangerMotDePasseDto, ConnexionDto, SessionDto } from './auth.dto';
+import { ChangerMotDePasseDto, ConnexionDto, InscriptionDto, SessionDto } from './auth.dto';
 import { Connecte } from './agent-connecte.decorator';
 import { JwtGuard } from './jwt.guard';
 import type { AgentConnecte } from './jwt.strategy';
@@ -20,6 +20,16 @@ export class AuthController {
   })
   async connexion(@Body() donnees: ConnexionDto): Promise<SessionDto> {
     return this.auth.connexion(donnees);
+  }
+
+  @Post('inscription')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: "S'inscrire",
+    description: 'Creation libre d un compte agent. Renvoie un jeton, comme la connexion.',
+  })
+  async inscription(@Body() donnees: InscriptionDto) {
+    return this.auth.inscription(donnees);
   }
 
   @Post('changer-mot-de-passe')

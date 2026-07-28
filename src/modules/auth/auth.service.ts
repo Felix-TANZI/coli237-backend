@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PasswordService } from '../../securite/password.service';
-import type { ChangerMotDePasseDto, ConnexionDto } from './auth.dto';
+import type { ChangerMotDePasseDto, ConnexionDto, InscriptionDto } from './auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -43,6 +43,48 @@ export class AuthService {
       sub: agent.id,
       role: agent.role,
     });
+
+    return {
+      jeton,
+      agent: {
+        id: agent.id,
+        nom: agent.nom,
+        email: agent.email,
+        role: agent.role,
+        doitChangerMotDePasse: agent.doitChangerMotDePasse,
+      },
+    };
+  }
+
+  // Inscription libre : cree un compte agent actif, deja connecte.
+  async inscription(donnees: InscriptionDto) {
+    // Verifie que l'email et le telephone ne sont pas deja pris.
+    const existant = await this.prisma.agent.findFirst({
+      where: {
+        supprimeLe: null,
+        OR: [{ email: donnees.email }, { telephone: donnees.telephone }],
+      },
+    });
+
+    if (existant) {
+      throw new UnauthorizedException('Un compte existe deja avec cet email ou ce telephone.');
+    }
+
+    const empreinte = await this.password.chiffrer(donnees.motDePasse);
+
+    const agent = await this.prisma.agent.create({
+      data: {
+        nom: donnees.nom,
+        email: donnees.email,
+        telephone: donnees.telephone,
+        motDePasse: empreinte,
+        role: 'AGENT',
+        doitChangerMotDePasse: false,
+        statut: 'ACTIF',
+      },
+    });
+
+    const jeton = this.jwt.sign({ sub: agent.id, role: agent.role });
 
     return {
       jeton,

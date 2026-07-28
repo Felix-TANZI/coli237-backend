@@ -41,3 +41,16 @@ export const ChangerMotDePasseSchema = z.object({
 });
 
 export class ChangerMotDePasseDto extends createZodDto(ChangerMotDePasseSchema) {}
+
+// --- Inscription libre d'un agent ---
+export const InscriptionSchema = z.object({
+  nom: z.string().trim().min(2, 'Le nom est requis').max(120),
+  email: z.string().trim().email('Email invalide').max(160),
+  telephone: z
+    .string()
+    .trim()
+    .regex(/^\+?\d{8,15}$/, 'Numero invalide'),
+  motDePasse: z.string().min(6, 'Au moins 6 caracteres').max(100),
+});
+
+export class InscriptionDto extends createZodDto(InscriptionSchema) {}
