@@ -1,100 +1,169 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# COLI237 — Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API de la plateforme de recensement de livreurs **COLI237**.
+Développée avec NestJS, Prisma et PostgreSQL.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+> Éditeur : NET AND PROSYSTEMS SARL
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Aperçu
 
-## Project setup
+Cette API gère le recensement des acteurs de la livraison (livreurs indépendants, livreurs d'agence, administrateurs de compagnie, managers d'agence) par des agents de terrain. Elle expose deux espaces logiques :
 
-```bash
-$ pnpm install
-```
+- **Espace agent** : recensement des personnes, gestion des compagnies, consultation de ses propres fiches.
+- **Espace admin** : validation ou rejet des fiches, gestion des agents, export des données.
 
-## Compile and run the project
+Les agents travaillent parfois hors ligne ; la synchronisation se fait côté frontend.
+
+---
+
+## Prérequis
+
+- **Node.js** 20 ou plus (testé sur Node 24)
+- **pnpm** (gestionnaire de paquets)
+- **Docker** (pour la base PostgreSQL en local)
+
+---
+
+## Installation
 
 ```bash
-# development
-$ pnpm run start
+# 1. Cloner le dépôt
+git clone <url-du-depot-backend>
+cd coli237-backend
 
-# watch mode
-$ pnpm run start:dev
+# 2. Installer les dépendances
+pnpm install
 
-# production mode
-$ pnpm run start:prod
+# 3. Créer le fichier d'environnement
+cp .env.example .env
+# puis éditer .env (voir la section Configuration)
+
+# 4. Démarrer la base PostgreSQL (Docker)
+docker compose up -d    # ou votre commande Docker habituelle
+
+# 5. Appliquer les migrations et générer le client Prisma
+pnpm prisma migrate dev
+pnpm prisma generate
+
+# 6. Créer le premier compte administrateur (script d'amorçage)
+pnpm prisma db seed
 ```
 
-## Run tests
+---
+
+## Configuration
+
+Toutes les variables sont documentées dans `.env.example`. Les principales :
+
+| Variable                                                 | Rôle                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------ |
+| `PORT`                                                   | Port d'écoute de l'API (défaut : 3000)                 |
+| `DATABASE_URL`                                           | Chaîne de connexion PostgreSQL                         |
+| `JWT_SECRET`                                             | Clé de signature des jetons (générer une valeur forte) |
+| `JWT_EXPIRES_IN`                                         | Durée de validité des jetons (ex : `7d`)               |
+| `CORS_ORIGINS`                                           | Origines autorisées (ex : `http://localhost:5173`)     |
+| `ADMIN_EMAIL` / `ADMIN_TELEPHONE` / `ADMIN_MOT_DE_PASSE` | Identifiants du premier admin créé par le seed         |
+
+> **Important** : le fichier `.env` ne doit jamais être versionné (il est déjà dans `.gitignore`). Pour générer un `JWT_SECRET` fort :
+>
+> ```bash
+> node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+> ```
+
+---
+
+## Lancer le projet
 
 ```bash
-# unit tests
-$ pnpm run test
+# Développement (rechargement automatique)
+pnpm start:dev
 
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+# Production
+pnpm build
+pnpm start:prod
 ```
 
-## Deployment
+L'API démarre sur `http://localhost:3000`.
+La documentation interactive Swagger est disponible sur `http://localhost:3000/docs`.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+---
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Scripts utiles
 
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+| Commande                  | Effet                           |
+| ------------------------- | ------------------------------- |
+| `pnpm start:dev`          | Lance l'API en mode watch       |
+| `pnpm build`              | Compile le projet               |
+| `pnpm typecheck`          | Vérifie les types sans compiler |
+| `pnpm lint`               | Analyse le code (ESLint)        |
+| `pnpm format`             | Formate le code (Prettier)      |
+| `pnpm test`               | Lance les tests                 |
+| `pnpm prisma migrate dev` | Crée et applique une migration  |
+| `pnpm prisma generate`    | Régénère le client Prisma       |
+| `pnpm prisma db seed`     | Crée le premier admin           |
+
+---
+
+## Structure
+
+```
+src/
+├── config/          Configuration (env, Swagger)
+├── prisma/          Service Prisma
+├── securite/        Garde-fous transverses
+├── stockage/        Enregistrement des fichiers
+├── modules/
+│   ├── auth/        Connexion, inscription, mot de passe
+│   ├── agents/      Gestion des agents (admin)
+│   ├── personnes/   Recensement, validation, documents
+│   ├── compagnies/  Gestion des compagnies
+│   ├── export/      Export Excel / PDF
+│   └── health/      Sonde de disponibilité
+└── main.ts          Point d'entrée
+prisma/
+├── schema.prisma    Modèle de données
+├── migrations/      Historique des migrations
+└── seed.ts          Amorçage (premier admin)
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## Sécurité
 
-Check out a few resources that may come in handy when working with NestJS:
+L'API applique plusieurs protections :
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- **Jetons JWT** pour l'authentification, signés avec `JWT_SECRET`.
+- **Helmet** pour durcir les en-têtes HTTP (CSP stricte, anti-clickjacking).
+- **Rate limiting** (`@nestjs/throttler`) : limite globale par IP, et limites strictes sur la connexion et l'inscription.
+- **Validation des entrées** via Zod sur toutes les requêtes.
+- **Validation des fichiers** : seuls jpg, png et pdf sont acceptés, taille maximale 5 Mo.
+- **CORS** restreint aux origines déclarées.
+- `trust proxy` activé pour un fonctionnement correct derrière un reverse proxy.
 
-## Support
+---
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Principaux points d'entrée de l'API
 
-## Stay in touch
+| Méthode    | Route                        | Description              | Accès                      |
+| ---------- | ---------------------------- | ------------------------ | -------------------------- |
+| POST       | `/auth/connexion`            | Se connecter             | Public                     |
+| POST       | `/auth/inscription`          | Créer un compte agent    | Public                     |
+| POST       | `/auth/changer-mot-de-passe` | Changer son mot de passe | Connecté                   |
+| GET / POST | `/personnes`                 | Lister / recenser        | Connecté                   |
+| PATCH      | `/personnes/:id`             | Modifier une fiche       | Agent (ses fiches) / Admin |
+| POST       | `/personnes/:id/valider`     | Valider une fiche        | Admin                      |
+| POST       | `/personnes/:id/rejeter`     | Rejeter une fiche        | Admin                      |
+| POST       | `/personnes/:id/documents`   | Ajouter un document      | Connecté                   |
+| GET / POST | `/compagnies`                | Lister / créer           | Connecté                   |
+| GET        | `/export/personnes.xlsx`     | Export Excel             | Connecté                   |
+| GET        | `/export/personnes.pdf`      | Export PDF               | Connecté                   |
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+La liste complète et à jour est consultable sur `/docs`.
 
-## License
+---
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Licence
 
-## npx prettier --write .
+Projet privé — NET AND PROSYSTEMS SARL. Tous droits réservés.

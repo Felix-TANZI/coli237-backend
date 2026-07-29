@@ -20,7 +20,6 @@ export class PersonnesService {
 
   // Recense une nouvelle personne. L'agent qui cree est enregistre.
   async creer(agentId: string, donnees: CreerPersonneDto) {
-    // On nettoie l'email vide en null.
     const email = donnees.email && donnees.email.trim() ? donnees.email.trim() : null;
 
     return this.prisma.personne.create({
@@ -66,6 +65,7 @@ export class PersonnesService {
       include: {
         agent: { select: { id: true, nom: true } },
         compagnie: { select: { id: true, nom: true } },
+        documents: true,
       },
     });
   }
@@ -87,7 +87,7 @@ export class PersonnesService {
     return personne;
   }
 
-  // Modifie une personne. Regles identiques a l'ancien systeme :
+  // Modifie une personne. Regles :
   //  - ADMIN peut tout modifier (sauf fiche validee)
   //  - AGENT ne modifie que ses propres fiches non validees
   async modifier(id: string, agent: { id: string; role: string }, donnees: ModifierPersonneDto) {
@@ -154,6 +154,20 @@ export class PersonnesService {
         personneId,
       },
     });
+  }
+
+  // Renvoie une URL signee temporaire pour telecharger une piece jointe.
+  async urlDocument(personneId: string, documentId: string): Promise<{ url: string }> {
+    const document = await this.prisma.pieceJointe.findFirst({
+      where: { id: documentId, personneId },
+    });
+
+    if (!document) {
+      throw new NotFoundException('Document introuvable.');
+    }
+
+    const url = await this.stockage.urlSignee(document.chemin);
+    return { url };
   }
 
   // Valide une fiche : elle entre au registre officiel.

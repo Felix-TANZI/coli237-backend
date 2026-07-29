@@ -36,7 +36,8 @@ model Agent {
   createdAt  DateTime     @default(now()) @map("created_at")
   updatedAt  DateTime     @updatedAt @map("updated_at")
 
-  personnes Personne[]
+  personnes  Personne[]
+  compagnies Compagnie[]
 
   @@index([statut])
   @@index([role])
@@ -57,6 +58,11 @@ model Compagnie {
   adminId String?   @map("admin_id") @db.Uuid
   admin   Personne? @relation("AdminCompagnie", fields: [adminId], references: [id], onDelete: SetNull)
 
+  // Agent qui a cree la compagnie (tracabilite). Optionnel : les compagnies
+  // creees avant cette version n'en ont pas.
+  agentId String? @map("agent_id") @db.Uuid
+  agent   Agent?  @relation(fields: [agentId], references: [id], onDelete: SetNull)
+
   supprimeLe DateTime? @map("supprime_le")
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @updatedAt @map("updated_at")
@@ -64,6 +70,7 @@ model Compagnie {
   personnes Personne[]
 
   @@index([adminId])
+  @@index([agentId])
   @@index([supprimeLe])
   @@map("compagnies")
 }

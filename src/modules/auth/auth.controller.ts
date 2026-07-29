@@ -1,5 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { ChangerMotDePasseDto, ConnexionDto, InscriptionDto, SessionDto } from './auth.dto';
 import { Connecte } from './agent-connecte.decorator';
@@ -11,6 +12,8 @@ import type { AgentConnecte } from './jwt.strategy';
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
+  // Connexion : 5 tentatives par minute par IP (contre la force brute).
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('connexion')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -22,6 +25,8 @@ export class AuthController {
     return this.auth.connexion(donnees);
   }
 
+  // Inscription : 3 comptes par minute par IP (contre la creation massive).
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @Post('inscription')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({

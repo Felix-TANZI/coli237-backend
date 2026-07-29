@@ -6,11 +6,13 @@ import type { CreerCompagnieDto, ModifierCompagnieDto } from './compagnies.dto';
 export class CompagniesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async creer(donnees: CreerCompagnieDto) {
-    return this.prisma.compagnie.create({ data: donnees });
+  // On enregistre l'agent qui cree la compagnie (tracabilite).
+  async creer(agentId: string, donnees: CreerCompagnieDto) {
+    return this.prisma.compagnie.create({
+      data: { ...donnees, agentId },
+    });
   }
 
-  // Liste les compagnies avec le nombre de personnes et l'admin rattache.
   async lister() {
     return this.prisma.compagnie.findMany({
       where: { supprimeLe: null },
@@ -18,6 +20,7 @@ export class CompagniesService {
       include: {
         _count: { select: { personnes: true } },
         admin: { select: { id: true, prenom: true, nom: true } },
+        agent: { select: { id: true, nom: true } },
       },
     });
   }
@@ -28,6 +31,7 @@ export class CompagniesService {
       include: {
         _count: { select: { personnes: true } },
         admin: { select: { id: true, prenom: true, nom: true } },
+        agent: { select: { id: true, nom: true } },
       },
     });
 
@@ -43,7 +47,6 @@ export class CompagniesService {
     return this.prisma.compagnie.update({ where: { id }, data: donnees });
   }
 
-  // Suppression douce.
   async archiver(id: string) {
     await this.trouver(id);
     return this.prisma.compagnie.update({

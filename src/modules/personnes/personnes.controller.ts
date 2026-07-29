@@ -108,6 +108,18 @@ export class PersonnesController {
     return this.personnes.ajouterPiece(id, type, fichier);
   }
 
+  @Get(':id/documents/:documentId/url')
+  @ApiOperation({
+    summary: 'Obtenir le lien de telechargement d un document',
+    description: 'Renvoie une URL signee temporaire (valide 1 heure).',
+  })
+  async urlDocument(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('documentId', ParseUUIDPipe) documentId: string,
+  ) {
+    return this.personnes.urlDocument(id, documentId);
+  }
+
   @Post(':id/valider')
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
